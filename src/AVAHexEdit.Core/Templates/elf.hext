@@ -1,0 +1,85 @@
+# ELF (Linux, BSD and most Unix executables and libraries): the header, then the program and section headers.
+name "ELF executable"
+extensions "so" "o" "elf" "ko"
+magic "7F 45 4C 46"
+
+struct ident {
+  bytes[4] magic
+  u8 class { 1: "32-bit", 2: "64-bit" }
+  u8 data { 1: "little-endian", 2: "big-endian" }
+  u8 version
+  u8 osAbi { 0: "System V", 3: "Linux", 6: "Solaris", 9: "FreeBSD", 12: "OpenBSD" }
+  u8 abiVersion
+  bytes[7] padding
+}
+if ident.data == 2 { endian big } else { endian little }
+struct header {
+  u16 type { 0: "none", 1: "relocatable", 2: "executable", 3: "shared object", 4: "core" }
+  u16 machine { 3: "x86", 8: "MIPS", 20: "PowerPC", 40: "ARM", 62: "x86-64", 183: "AArch64", 243: "RISC-V" }
+  u32 version
+  if ident.class == 2 {
+    u64 entry
+    u64 programHeaders
+    u64 sectionHeaders
+  } else {
+    u32 entry
+    u32 programHeaders
+    u32 sectionHeaders
+  }
+  u32 flags
+  u16 headerSize
+  u16 programHeaderSize
+  u16 programHeaderCount
+  u16 sectionHeaderSize
+  u16 sectionHeaderCount
+  u16 sectionNames
+}
+if header.programHeaderCount > 0 {
+  seek header.programHeaders
+  repeat programHeader[header.programHeaderCount] label type {
+    u32 type { 0: "null", 1: "LOAD", 2: "DYNAMIC", 3: "INTERP", 4: "NOTE", 6: "PHDR", 7: "TLS", 0x6474E550: "GNU_EH_FRAME", 0x6474E551: "GNU_STACK", 0x6474E552: "GNU_RELRO", 0x6474E553: "GNU_PROPERTY" }
+    if ident.class == 2 {
+      u32 flags
+      u64 offset
+      u64 virtualAddress
+      u64 physicalAddress
+      u64 fileSize
+      u64 memorySize
+      u64 alignment
+    } else {
+      u32 offset
+      u32 virtualAddress
+      u32 physicalAddress
+      u32 fileSize
+      u32 memorySize
+      u32 flags
+      u32 alignment
+    }
+  }
+}
+if header.sectionHeaderCount > 0 && header.sectionHeaders + header.sectionHeaderCount * header.sectionHeaderSize <= len {
+  seek header.sectionHeaders
+  repeat sectionHeader[header.sectionHeaderCount] label type {
+    u32 nameOffset
+    u32 type { 0: "null", 1: "PROGBITS", 2: "SYMTAB", 3: "STRTAB", 4: "RELA", 5: "HASH", 6: "DYNAMIC", 7: "NOTE", 8: "NOBITS", 9: "REL", 11: "DYNSYM", 14: "INIT_ARRAY", 15: "FINI_ARRAY" }
+    if ident.class == 2 {
+      u64 flags
+      u64 address
+      u64 offset
+      u64 size
+      u32 link
+      u32 info
+      u64 alignment
+      u64 entrySize
+    } else {
+      u32 flags
+      u32 address
+      u32 offset
+      u32 size
+      u32 link
+      u32 info
+      u32 alignment
+      u32 entrySize
+    }
+  }
+}

@@ -1,0 +1,41 @@
+# Windows bitmap: a file header, an info header (of several sizes), an optional palette, then the pixels.
+name "BMP bitmap"
+extensions "bmp" "dib"
+magic "42 4D"
+endian little
+
+struct fileHeader {
+  ascii[2] signature
+  u32 fileSize
+  u16 reserved1
+  u16 reserved2
+  u32 pixelOffset
+}
+struct infoHeader {
+  u32 headerSize
+  if headerSize == 12 {
+    u16 width
+    u16 height
+    u16 planes
+    u16 bitsPerPixel
+  } else {
+    i32 width
+    i32 height
+    u16 planes
+    u16 bitsPerPixel
+    u32 compression { 0: "none (BI_RGB)", 1: "RLE8", 2: "RLE4", 3: "bit fields", 4: "JPEG", 5: "PNG", 6: "alpha bit fields" }
+    u32 imageSize
+    i32 xPixelsPerMetre
+    i32 yPixelsPerMetre
+    u32 coloursUsed
+    u32 importantColours
+    if headerSize > 40 {
+      bytes[headerSize - 40] extended
+    }
+  }
+}
+if fileHeader.pixelOffset > pos {
+  repeat colour[(fileHeader.pixelOffset - pos) / 4] { u8 blue u8 green u8 red u8 reserved }
+}
+seek fileHeader.pixelOffset
+bytes[remaining] pixels

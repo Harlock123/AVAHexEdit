@@ -1,0 +1,66 @@
+# ZIP (and the formats built on it: .jar, .docx, .xlsx, .apk, .nupkg): each file's local header and data, then the
+# central directory and its end record.
+name "ZIP archive"
+extensions "zip" "jar" "docx" "xlsx" "pptx" "odt" "apk" "nupkg" "epub"
+magic "50 4B 03 04"
+endian little
+
+repeat file while u32at(pos) == 0x04034B50 label name {
+  u32 signature
+  u16 versionNeeded
+  u16 flags
+  u16 method { 0: "stored", 8: "deflate", 9: "deflate64", 12: "bzip2", 14: "LZMA", 93: "Zstandard", 95: "XZ" }
+  u16 time
+  u16 date
+  u32 crc32
+  u32 compressedSize
+  u32 size
+  u16 nameLength
+  u16 extraLength
+  ascii[nameLength] name
+  bytes[extraLength] extra
+  bytes[compressedSize] data
+  if u32at(pos) == 0x08074B50 {
+    struct descriptor {
+      u32 signature
+      u32 crc32
+      u32 compressedSize
+      u32 size
+    }
+  }
+}
+repeat entry while u32at(pos) == 0x02014B50 label name {
+  u32 signature
+  u16 versionMadeBy
+  u16 versionNeeded
+  u16 flags
+  u16 method { 0: "stored", 8: "deflate", 9: "deflate64", 12: "bzip2", 14: "LZMA", 93: "Zstandard", 95: "XZ" }
+  u16 time
+  u16 date
+  u32 crc32
+  u32 compressedSize
+  u32 size
+  u16 nameLength
+  u16 extraLength
+  u16 commentLength
+  u16 disk
+  u16 internalAttributes
+  u32 externalAttributes
+  u32 localHeaderOffset
+  ascii[nameLength] name
+  bytes[extraLength] extra
+  ascii[commentLength] comment
+}
+if u32at(pos) == 0x06054B50 {
+  struct end {
+    u32 signature
+    u16 disk
+    u16 directoryDisk
+    u16 entriesOnDisk
+    u16 entries
+    u32 directorySize
+    u32 directoryOffset
+    u16 commentLength
+    ascii[commentLength] comment
+  }
+}

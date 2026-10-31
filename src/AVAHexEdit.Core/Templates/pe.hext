@@ -1,0 +1,81 @@
+# Windows executables and DLLs (and .NET assemblies): the MS-DOS header, the PE header, the optional header and the
+# section table.
+name "Windows executable (PE)"
+extensions "exe" "dll" "sys" "efi" "scr"
+magic "4D 5A"
+endian little
+
+struct dosHeader {
+  ascii[2] magic
+  bytes[58] dosFields
+  u32 peOffset
+}
+seek dosHeader.peOffset
+struct peHeader {
+  ascii[4] signature
+  u16 machine { 0x14C: "x86", 0x8664: "x86-64", 0xAA64: "ARM64", 0x1C0: "ARM", 0x1C4: "ARM Thumb-2" }
+  u16 sectionCount
+  u32 timeDateStamp
+  u32 symbolTable
+  u32 symbolCount
+  u16 optionalHeaderSize
+  u16 characteristics
+}
+if peHeader.optionalHeaderSize > 0 {
+  struct optionalHeader[peHeader.optionalHeaderSize] {
+    u16 magic { 0x10B: "PE32", 0x20B: "PE32+" }
+    u8 linkerMajor
+    u8 linkerMinor
+    u32 codeSize
+    u32 initialisedDataSize
+    u32 uninitialisedDataSize
+    u32 entryPoint
+    u32 codeBase
+    if magic == 0x10B {
+      u32 dataBase
+      u32 imageBase
+    } else {
+      u64 imageBase
+    }
+    u32 sectionAlignment
+    u32 fileAlignment
+    u16 osMajor
+    u16 osMinor
+    u16 imageMajor
+    u16 imageMinor
+    u16 subsystemMajor
+    u16 subsystemMinor
+    u32 win32Version
+    u32 imageSize
+    u32 headersSize
+    u32 checksum
+    u16 subsystem { 1: "native", 2: "Windows GUI", 3: "Windows console", 10: "EFI application", 11: "EFI boot driver", 12: "EFI runtime driver" }
+    u16 dllCharacteristics
+    if magic == 0x10B {
+      u32 stackReserve
+      u32 stackCommit
+      u32 heapReserve
+      u32 heapCommit
+    } else {
+      u64 stackReserve
+      u64 stackCommit
+      u64 heapReserve
+      u64 heapCommit
+    }
+    u32 loaderFlags
+    u32 directoryCount
+    repeat directory[min(directoryCount, remaining / 8)] { u32 address u32 size }
+  }
+}
+repeat section[peHeader.sectionCount] label name {
+  ascii[8] name
+  u32 virtualSize
+  u32 virtualAddress
+  u32 rawSize
+  u32 rawOffset
+  u32 relocations
+  u32 lineNumbers
+  u16 relocationCount
+  u16 lineNumberCount
+  u32 characteristics
+}

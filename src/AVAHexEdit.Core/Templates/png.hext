@@ -1,0 +1,49 @@
+# PNG: an 8-byte signature, then chunks, each its length, its type, its data and a CRC.
+name "PNG image"
+extensions "png" "apng"
+magic "89 50 4E 47 0D 0A 1A 0A"
+endian big
+
+bytes[8] signature
+repeat chunk label type {
+  u32 length
+  fourcc type
+  if type == "IHDR" {
+    struct header[length] {
+      u32 width
+      u32 height
+      u8 bitDepth
+      u8 colourType { 0: "greyscale", 2: "truecolour", 3: "indexed", 4: "greyscale and alpha", 6: "truecolour and alpha" }
+      u8 compression { 0: "deflate" }
+      u8 filter { 0: "adaptive" }
+      u8 interlace { 0: "none", 1: "Adam7" }
+    }
+  } else if type == "PLTE" {
+    repeat colour[length / 3] { u8 red u8 green u8 blue }
+  } else if type == "tEXt" {
+    struct text[length] {
+      zstring keyword
+      ascii[remaining] text
+    }
+  } else if type == "pHYs" {
+    struct physical[length] {
+      u32 pixelsPerUnitX
+      u32 pixelsPerUnitY
+      u8 unit { 0: "unknown", 1: "metre" }
+    }
+  } else if type == "tIME" {
+    struct modified[length] {
+      u16 year
+      u8 month
+      u8 day
+      u8 hour
+      u8 minute
+      u8 second
+    }
+  } else if type == "gAMA" {
+    struct gamma[length] { u32 gamma }
+  } else {
+    bytes[length] data
+  }
+  u32 crc
+}

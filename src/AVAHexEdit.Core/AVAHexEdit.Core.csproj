@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Everything but the window: the document and its undo, reading files a page at a time, search, the value
+       inspector, checksums, comparing files and the structure templates. -->
+  <PropertyGroup>
+    <RootNamespace>AVAHexEdit.Core</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The built-in structure templates, read by TemplateLibrary. -->
+    <EmbeddedResource Include="Templates\*.hext" LogicalName="Templates.%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="AVAHexEdit.Tests" />
+  </ItemGroup>
+</Project>

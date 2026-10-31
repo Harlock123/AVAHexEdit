@@ -1,0 +1,50 @@
+# LightWave 6 and later objects (LWO2): an IFF FORM of chunks: layers, points, polygons, tags and surfaces.
+name "LightWave object (LWO2)"
+extensions "lwo"
+magic "46 4F 52 4D ?? ?? ?? ?? 4C 57 4F 32"
+endian big
+
+fourcc form
+u32 size
+fourcc type
+repeat chunk label id {
+  fourcc id
+  u32 size
+  if id == "PNTS" {
+    repeat point[size / 12] { f32 x f32 y f32 z }
+  } else if id == "LAYR" {
+    struct layer[size] {
+      u16 number
+      u16 flags
+      f32 pivotX
+      f32 pivotY
+      f32 pivotZ
+      zstring name
+      align 2
+      if remaining >= 2 { i16 parent }
+    }
+  } else if id == "TAGS" {
+    struct tags[size] {
+      repeat tag {
+        zstring text
+        align 2
+      }
+    }
+  } else if id == "SURF" {
+    struct surface[size] {
+      zstring name
+      align 2
+      zstring source
+      align 2
+      repeat subchunk label id {
+        fourcc id
+        u16 size
+        bytes[size] data
+        align 2
+      }
+    }
+  } else {
+    bytes[size] data
+  }
+  align 2
+}

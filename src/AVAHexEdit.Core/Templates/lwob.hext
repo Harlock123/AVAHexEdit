@@ -1,0 +1,46 @@
+# LightWave 5 objects (LWOB): an IFF FORM of chunks: points, surface names, polygons and surfaces.
+name "LightWave object (LWOB)"
+extensions "lwo" "lwob"
+magic "46 4F 52 4D ?? ?? ?? ?? 4C 57 4F 42"
+endian big
+
+fourcc form
+u32 size
+fourcc type
+repeat chunk label id {
+  fourcc id
+  u32 size
+  if id == "PNTS" {
+    repeat point[size / 12] { f32 x f32 y f32 z }
+  } else if id == "SRFS" {
+    struct names[size] {
+      repeat name {
+        zstring text
+        align 2
+      }
+    }
+  } else if id == "POLS" {
+    struct polygons[size] {
+      repeat polygon {
+        u16 count
+        u16[count] points
+        i16 surface
+        if surface < 0 { u16 detailCount }
+      }
+    }
+  } else if id == "SURF" {
+    struct surface[size] {
+      zstring name
+      align 2
+      repeat subchunk label id {
+        fourcc id
+        u16 size
+        bytes[size] data
+        align 2
+      }
+    }
+  } else {
+    bytes[size] data
+  }
+  align 2
+}

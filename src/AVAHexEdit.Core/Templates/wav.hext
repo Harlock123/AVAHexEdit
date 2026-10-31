@@ -1,0 +1,40 @@
+# WAV: a RIFF file of chunks, each padded to an even length.
+name "WAV audio"
+extensions "wav" "wave"
+magic "52 49 46 46 ?? ?? ?? ?? 57 41 56 45"
+endian little
+
+fourcc riff
+u32 size
+fourcc form
+repeat chunk label id {
+  fourcc id
+  u32 size
+  if id == "fmt " {
+    struct format[size] {
+      u16 audioFormat { 1: "PCM", 3: "IEEE float", 6: "A-law", 7: "mu-law", 0xFFFE: "extensible" }
+      u16 channels
+      u32 sampleRate
+      u32 byteRate
+      u16 blockAlign
+      u16 bitsPerSample
+      if remaining >= 2 {
+        u16 extraSize
+        bytes[remaining] extra
+      }
+    }
+  } else if id == "LIST" {
+    struct list[size] {
+      fourcc listType
+      repeat item label id {
+        fourcc id
+        u32 size
+        ascii[size] text
+        align 2
+      }
+    }
+  } else {
+    bytes[min(size, remaining)] data
+  }
+  align 2
+}

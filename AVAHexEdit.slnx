@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AVAHexEdit.Core/AVAHexEdit.Core.csproj" />
+    <Project Path="src/AVAHexEdit/AVAHexEdit.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AVAHexEdit.Tests/AVAHexEdit.Tests.csproj" />
+  </Folder>
+</Solution>

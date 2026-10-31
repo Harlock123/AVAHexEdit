@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <!-- The tests pass no cancellation tokens: each is quick, and none waits on anything outside. -->
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless.XUnit" Version="12.1.4" />
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <ProjectReference Include="..\..\src\AVAHexEdit\AVAHexEdit.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- A real PNG (the app's own icon) for the template and window tests. -->
+    <None Include="..\..\src\AVAHexEdit\Assets\AVAHexEdit.png" Link="Samples\icon.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

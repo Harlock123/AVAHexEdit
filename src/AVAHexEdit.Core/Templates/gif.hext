@@ -1,0 +1,41 @@
+# GIF: a header, the logical screen and its colour table, then extension and image blocks, each data block in
+# sub-blocks of up to 255 bytes, to the trailer (3B).
+name "GIF image"
+extensions "gif"
+magic "47 49 46 38"
+endian little
+
+ascii[6] signature
+struct screen {
+  u16 width
+  u16 height
+  u8 flags
+  u8 backgroundColour
+  u8 aspect
+}
+if screen.flags & 0x80 {
+  repeat colour[2 << (screen.flags & 7)] { u8 red u8 green u8 blue }
+}
+repeat block while u8at(pos) != 0x3B label introducer {
+  u8 introducer { 0x21: "extension", 0x2C: "image" }
+  if introducer == 0x21 {
+    u8 extensionType { 0x01: "plain text", 0xF9: "graphic control", 0xFE: "comment", 0xFF: "application" }
+    repeat subBlock while u8at(pos) != 0 { u8 size bytes[size] data }
+    u8 terminator
+  } else if introducer == 0x2C {
+    u16 left
+    u16 top
+    u16 width
+    u16 height
+    u8 flags
+    if flags & 0x80 {
+      repeat colour[2 << (flags & 7)] { u8 red u8 green u8 blue }
+    }
+    u8 lzwMinimumCodeSize
+    repeat subBlock while u8at(pos) != 0 { u8 size bytes[size] data }
+    u8 terminator
+  } else {
+    bytes[remaining] unknown
+  }
+}
+if remaining > 0 { u8 trailer }
